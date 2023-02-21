@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-dados
+
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+  - "ReadWriteMany"
+  nfs:
+    path: /dados
+    server: 10.210.28.250
+
+
+
+---
+
+piVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dados
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: ""
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: mysql
+
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:  
+        app: mysql
+    spec:
+      containers:
+        - image: ricardolnx/desafio_backend_db:1.0
+          args:
+            - "--ignore-db-dir=lost+found"
+          imagePullPolicy: Always
+          name: mysql
+          ports:
+            - containerPort: 3306
+              name: mysql
+          
+          volumeMounts:
+            - name: mysql-dados
+              mountPath: /var/lib/mysql/
+      volumes:
+        - name: dados
+          persistentVolumeClaim:
+            claimName: dados
+
+--- 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  labels:
+    app: php
+
+spec: 
+  replicas: 6
+  selector: 
+    matchLabels:
+      app: php
+  template:
+    metadata:
+      labels:
+        app: php
+    spec:
+      containers:
+        - name: php
+          image: ricardolnx/desafio_backend:1.0
+          imagePullPolicy: Always
+          ports:
+           - containerPort: 80
