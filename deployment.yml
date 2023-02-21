@@ -12,17 +12,15 @@ spec:
     path: /dados
     server: 10.210.28.250
 
-
-
 ---
 
-piVersion: v1
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: dados
+  name: mysql-dados
 spec:
   accessModes:
-    - "ReadWriteOnce"
+    - "ReadWriteMany"
   resources:
     requests:
       storage: 10Gi
@@ -34,7 +32,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata: 
   name: mysql
-
 spec:
   selector:
     matchLabels:
@@ -58,9 +55,9 @@ spec:
             - name: mysql-dados
               mountPath: /var/lib/mysql/
       volumes:
-        - name: dados
+        - name: mysql-dados
           persistentVolumeClaim:
-            claimName: dados
+            claimName: mysql-dados
 
 --- 
 
